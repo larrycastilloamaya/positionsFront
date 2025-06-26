@@ -56,6 +56,8 @@ https://positionshikru.azurewebsites.net/api/
 - `GET /positions` — Obtener todas las posiciones
 - `POST /positions` — Crear una posición
 - `DELETE /positions/{id}` — Eliminar una posición
+- `PUT /positions/{id}` — Edita una posición
+- `GET /positions/{id}` — Obtiene una posición
 - `GET /recruiters` — Obtener reclutadores
 - `GET /departments` — Obtener departamentos
 
@@ -67,8 +69,9 @@ https://positionshikru.azurewebsites.net/api/
 - 🔍 Filtros por texto, estado y presupuesto
 - ➕ Modal para crear nuevas posiciones
 - 🗑 Eliminar con confirmación SweetAlert
+- 🗑 Editar una posición
+- 🗑 Ver detalles de una posición
 - 🖼 UI responsive con Tailwind
-- ✅ Validación mínima y spinner al enviar
 
 ---
 
