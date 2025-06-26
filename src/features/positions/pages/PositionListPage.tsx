@@ -1,16 +1,20 @@
 import { useEffect, useState } from "react";
-import { getAllPositions, createPosition } from "../../../api/positions";
+import { getAllPositions, createPosition, updatePosition, deletePosition } from "../../../api/positions";
 import { getAllRecruiters, type Recruiter } from "../../../api/recruiters";
 import { getAllDepartments, type Department } from "../../../api/departments";
 import type { Position, PositionStatus } from "../types";
 import Swal from "sweetalert2";
-import { deletePosition } from "../../../api/positions";
+import PositionFilters from "../components/PositionFilters";
+import PositionFormModal from "../components/PositionFormModal";
+import PositionListTable from "../components/PositionListTable";
 
 export default function PositionTablePage() {
   const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
   const [recruiters, setRecruiters] = useState<Recruiter[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [editId, setEditId] = useState<string | null>(null);
+
 
   const statusOptions: PositionStatus[] = ["draft", "open", "closed", "archived"];
   const [search, setSearch] = useState("");
@@ -18,10 +22,8 @@ export default function PositionTablePage() {
   const [minBudget, setMinBudget] = useState("");
   const [maxBudget, setMaxBudget] = useState("");
   const [submitting, setSubmitting] = useState(false);
-const [successMessage, setSuccessMessage] = useState("");
-const [errorMessage, setErrorMessage] = useState("");
-
-
+  const [successMessage] = useState("");
+  const [errorMessage] = useState("");
   useEffect(() => {
     getAllPositions().then(setPositions).finally(() => setLoading(false));
     getAllRecruiters().then(setRecruiters);
@@ -29,13 +31,9 @@ const [errorMessage, setErrorMessage] = useState("");
   }, []);
 
   const filteredPositions = positions.filter((pos) => {
-    const matchesText = `${pos.title} ${pos.description} ${pos.location}`
-      .toLowerCase()
-      .includes(search.toLowerCase());
+    const matchesText = `${pos.title} ${pos.description} ${pos.location}`.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = status === "all" || pos.status === status;
-    const matchesBudget =
-      (!minBudget || pos.budget >= parseFloat(minBudget)) &&
-      (!maxBudget || pos.budget <= parseFloat(maxBudget));
+    const matchesBudget = (!minBudget || pos.budget >= parseFloat(minBudget)) && (!maxBudget || pos.budget <= parseFloat(maxBudget));
     return matchesText && matchesStatus && matchesBudget;
   });
 
@@ -57,41 +55,18 @@ const [errorMessage, setErrorMessage] = useState("");
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Listado de posiciones</h1>
 
         {/* Filtros */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <input
-            type="text"
-            placeholder="Buscar por título, descripción o ubicación..."
-            className="col-span-1 sm:col-span-2 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="all">Todos los estados</option>
-            {statusOptions.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              placeholder="Presupuesto min"
-              className="w-1/2 px-3 py-2 border border-gray-300 rounded-md"
-              value={minBudget}
-              onChange={(e) => setMinBudget(e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="Presupuesto max"
-              className="w-1/2 px-3 py-2 border border-gray-300 rounded-md"
-              value={maxBudget}
-              onChange={(e) => setMaxBudget(e.target.value)}
-            />
-          </div>
-        </div>
+        <PositionFilters
+          search={search}
+          status={status}
+          minBudget={minBudget}
+          maxBudget={maxBudget}
+          statusOptions={statusOptions}
+          onSearchChange={setSearch}
+          onStatusChange={setStatus}
+          onMinBudgetChange={setMinBudget}
+          onMaxBudgetChange={setMaxBudget}
+        />
+
 
         <div className="flex justify-end mb-4">
           <button
@@ -151,12 +126,26 @@ const [errorMessage, setErrorMessage] = useState("");
                             🔍
                           </button>
                           <button
-                            className="hover:text-yellow-600"
-                            onClick={() => alert(`Editar: ${pos.title}`)}
-                            title="Editar"
-                          >
-                            ✏️
-                          </button>
+                              className="hover:text-yellow-600"
+                              onClick={() => {
+                                setForm({
+                                  title: pos.title,
+                                  description: pos.description,
+                                  location: pos.location,
+                                  status: pos.status as PositionStatus,
+                                  budget: String(pos.budget),
+                                  recruiterId: pos.recruiter_Id,
+                                  departmentId: pos.department_Id,
+                                  closing_Date: pos.closing_Date?.split("T")[0] ?? "",
+                                });
+                                setEditId(pos.id);
+                                setShowModal(true);
+                              }}
+                              title="Editar"
+                            >
+                              ✏️
+                            </button>
+
                             <button
                               className="hover:text-red-600"
                               onClick={async () => {
@@ -216,104 +205,63 @@ const [errorMessage, setErrorMessage] = useState("");
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start sm:items-center z-50">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-lg relative mt-8 sm:mt-0 max-h-screen overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4 text-gray-500">Agregar nueva posición</h2>
+        {showModal && (
+          <PositionFormModal
+            form={form}
+            statusOptions={statusOptions}
+            recruiters={recruiters}
+            departments={departments}
+            submitting={submitting}
+            successMessage={successMessage}
+            errorMessage={errorMessage}
+            editId={editId}
+            onChange={(field, value) =>
+              setForm((prev) => ({ ...prev, [field]: value }))
+            }
+            onClose={() => {
+              setShowModal(false);
+              setEditId(null);
+              setForm({
+                title: "",
+                description: "",
+                location: "",
+                status: "draft",
+                budget: "",
+                recruiterId: "",
+                departmentId: "",
+                closing_Date: "",
+              });
+            }}
+            onSubmit={async () => {
+              setSubmitting(true);
+              try {
+                const payload = {
+                  title: form.title,
+                  description: form.description,
+                  location: form.location,
+                  status: form.status,
+                  budget: parseFloat(form.budget),
+                  recruiterId: form.recruiterId,
+                  departmentId: form.departmentId,
+                  closing_Date: form.closing_Date
+                    ? new Date(form.closing_Date).toISOString()
+                    : null,
+                };
 
-            <div className="grid gap-4">
-              <input type="text" placeholder="Título" className="border rounded-md px-3 py-2" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-              <textarea placeholder="Descripción" className="border rounded-md px-3 py-2" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              <input type="text" placeholder="Ubicación" className="border rounded-md px-3 py-2" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-              <select className="border rounded-md px-3 py-2" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as PositionStatus })}>
-                {statusOptions.map((opt) => (
-                  <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
-                ))}
-              </select>
-              <input type="number" placeholder="Presupuesto" className="border rounded-md px-3 py-2" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} />
-              <select className="w-full px-3 py-2 border rounded-md" value={form.recruiterId} onChange={(e) => setForm({ ...form, recruiterId: e.target.value })}>
-                <option value="">Seleccione un reclutador</option>
-                {recruiters.map((r) => (
-                  <option key={r.id} value={r.id}>{r.full_Name}</option>
-                ))}
-              </select>
-              <select className="w-full px-3 py-2 border rounded-md" value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })}>
-                <option value="">Seleccione un departamento</option>
-                {departments.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </select>
-              <input type="date" placeholder="Fecha de cierre" className="border rounded-md px-3 py-2" value={form.closing_Date} onChange={(e) => setForm({ ...form, closing_Date: e.target.value })} />
-            </div>
+                if (editId) {
+                  await updatePosition(editId, payload);
+                } else {
+                  await createPosition(payload);
+                }
 
-            <div className="mt-6 flex justify-end gap-2">
-          {successMessage && (
-            <div className="mt-4 text-green-600 font-medium text-sm">
-              {successMessage}
-            </div>
-          )}
+                await getAllPositions().then(setPositions);
+              } finally {
+                setSubmitting(false);
+              }
+            }}
+          />
+        )}
 
-          {errorMessage && (
-            <div className="mt-4 text-red-600 font-medium text-sm">
-              {errorMessage}
-            </div>
-          )}
-
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-gray-300 rounded-md">Cancelar</button>
-              <button
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-60"
-                disabled={submitting}
-                onClick={async () => {
-                  setSubmitting(true);
-                  setSuccessMessage("");
-                  setErrorMessage("");
-
-                  try {
-                    await createPosition({
-                      title: form.title,
-                      description: form.description,
-                      location: form.location,
-                      status: form.status,
-                      budget: parseFloat(form.budget),
-                      recruiterId: form.recruiterId,
-                      departmentId: form.departmentId,
-                      closing_Date: form.closing_Date
-                        ? new Date(form.closing_Date).toISOString()
-                        : null,
-                    });
-
-                    setSuccessMessage("✅ Posición agregada correctamente.");
-                    setForm({
-                      title: "",
-                      description: "",
-                      location: "",
-                      status: "draft",
-                      budget: "",
-                      recruiterId: "",
-                      departmentId: "",
-                      closing_Date: "",
-                    });
-                    // Espera 3 segundos antes de cerrar el modal
-                      setTimeout(() => {
-                        setShowModal(false);
-                        setSuccessMessage("");
-                      }, 2000);
-                    await getAllPositions().then(setPositions);
-     
-                  } catch (err) {
-                    setErrorMessage("❌ Error al agregar la posición.");
-                  } finally {
-                    setSubmitting(false);
-                  }
-                }}
-              >
-                {submitting ? "Agregando..." : "Agregar"}
-              </button>
-
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
