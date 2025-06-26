@@ -1,54 +1,91 @@
-# React + TypeScript + Vite
+# 🧭 Hikru Positions Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este proyecto es una aplicación frontend desarrollada en **React 18 + Vite + TypeScript** que consume una API REST para gestionar posiciones en Hikru.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Tecnologías Utilizadas
 
-## Expanding the ESLint configuration
+- [React 18](https://react.dev/)
+- [Vite](https://vitejs.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Axios](https://axios-http.com/)
+- [SweetAlert2](https://sweetalert2.github.io/)
+- [Bootstrap Icons](https://icons.getbootstrap.com/) (opcional)
+- Git + Netlify para despliegue
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 📦 Instalación
+
+```bash
+git clone https://github.com/tu-usuario/hikru-positions-frontend.git
+cd hikru-positions-frontend
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🧪 Scripts de desarrollo
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+### Iniciar en modo desarrollo:
+
+```bash
+npm run dev
 ```
+
+### Compilar para producción:
+
+```bash
+npm run build
+```
+
+---
+
+## 🌐 API REST consumida
+
+Esta aplicación consume el backend expuesto en:
+
+```
+https://positionshikru.azurewebsites.net/api/
+```
+
+### Endpoints utilizados:
+
+- `GET /positions` — Obtener todas las posiciones
+- `POST /positions` — Crear una posición
+- `DELETE /positions/{id}` — Eliminar una posición
+- `GET /recruiters` — Obtener reclutadores
+- `GET /departments` — Obtener departamentos
+
+---
+
+## 🧰 Funcionalidades principales
+
+- 📄 Listado de posiciones
+- 🔍 Filtros por texto, estado y presupuesto
+- ➕ Modal para crear nuevas posiciones
+- 🗑 Eliminar con confirmación SweetAlert
+- 🖼 UI responsive con Tailwind
+- ✅ Validación mínima y spinner al enviar
+
+---
+
+## 🌍 Despliegue en Netlify
+
+Este proyecto está preparado para ser desplegado directamente en [Netlify](https://netlify.com/).
+
+### Recomendaciones:
+
+- `build command`:  
+  ```
+  npm run build
+  ```
+
+- `publish directory`:  
+  ```
+  dist
+  ```
+
+
