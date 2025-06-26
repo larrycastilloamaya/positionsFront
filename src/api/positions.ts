@@ -53,3 +53,8 @@ export const updatePosition = async (id: string, data: any) => {
 
   await axios.put(`${API_URL}/${id}`, backendDto);
 };
+
+export const getPositionById = async (id: string): Promise<Position> => {
+  const response = await axios.get<Position>(`${API_URL}/${id}`);
+  return response.data;
+};

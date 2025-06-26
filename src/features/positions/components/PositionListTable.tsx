@@ -4,9 +4,12 @@ interface Props {
   positions: Position[];
   onEdit: (pos: Position) => void;
   onDelete: (pos: Position) => void;
+  onNavigate: (path: string) => void; 
 }
 
-export default function PositionListTable({ positions, onEdit, onDelete }: Props) {
+
+export default function PositionListTable({ positions, onEdit, onDelete,onNavigate  }: Props) {
+
   return (
     <div className="overflow-x-auto w-full">
       <table className="min-w-full border-collapse text-sm text-left">
@@ -52,7 +55,7 @@ export default function PositionListTable({ positions, onEdit, onDelete }: Props
                 <div className="flex justify-center gap-3 text-lg">
                   <button
                     className="hover:text-blue-600"
-                    onClick={() => alert(`Ver: ${pos.title}`)}
+                    onClick={() => onNavigate(`/positions/${pos.id}`)} 
                     title="Ver"
                   >
                     🔍
