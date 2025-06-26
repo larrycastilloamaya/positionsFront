@@ -9,10 +9,26 @@ export const getAllPositions = async (): Promise<Position[]> => {
   return response.data;
 };
 
+/*
 export const createPosition = async (position: PositionCreateDto): Promise<void> => {
   await axios.post(API_URL, position);
 };
+*/
 
+export const createPosition = async (position: PositionCreateDto) => {
+  const backendDto = {
+    Title: position.title,
+    Description: position.description,
+    Location: position.location,
+    Status: position.status,
+    RecruiterId: position.recruiterId,
+    DepartmentId: position.departmentId,
+    Budget: position.budget,
+    ClosingDate: position.closing_Date,
+  };
+
+  await axios.post(API_URL, backendDto);
+};
 export const deletePosition = async (id: string): Promise<string> => {
   const response = await axios.delete(`${API_URL}/${id}`);
   return response.data?.message || "Posición eliminada correctamente.";
